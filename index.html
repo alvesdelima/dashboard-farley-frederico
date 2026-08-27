@@ -1,0 +1,1435 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard | Campanha Farley Frederico</title>
+    <!-- Google Fonts & Chart.js -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+      :root {
+        --green: #08a83b;
+        --green-dark: #08752d;
+        --green-soft: #e9f8ee;
+        --green-glow: rgba(8, 168, 59, 0.15);
+        --bg: #f4f7f5;
+        --card: #ffffff;
+        --text: #17211a;
+        --muted: #718078;
+        --border: #e2ebe5;
+        --shadow: 0 4px 18px rgba(9, 45, 23, 0.05);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: var(--bg);
+        font-family: "Inter", sans-serif;
+        color: var(--text);
+        -webkit-font-smoothing: antialiased;
+      }
+      .app {
+        display: flex;
+        min-height: 100vh;
+      }
+
+      /* Sidebar */
+      .sidebar {
+        width: 250px;
+        background: #092d17;
+        color: white;
+        padding: 24px 18px;
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 100;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .logo {
+        font-weight: 900;
+        font-size: 20px;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        padding: 4px 8px 20px;
+      }
+      .logo span {
+        color: #32d85e;
+      }
+      .nav button {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #c9ddd0;
+        background: transparent;
+        border: none;
+        padding: 11px 14px;
+        border-radius: 10px;
+        margin: 4px 0;
+        font-size: 14px;
+        font-weight: 600;
+        transition: 0.2s;
+        cursor: pointer;
+        text-align: left;
+        font-family: inherit;
+      }
+      .nav button.active,
+      .nav button:hover {
+        background: #0d6c2e;
+        color: #fff;
+      }
+      .candidate-box {
+        background: #0d4421;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .candidate-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        background: #08752d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 15px;
+        color: #fff;
+        border: 2px solid #32d85e;
+        flex-shrink: 0;
+      }
+      .candidate-info b {
+        display: block;
+        font-size: 13px;
+        color: #fff;
+      }
+      .candidate-info small {
+        color: #8cb89c;
+        font-size: 11px;
+      }
+
+      /* Main Content */
+      .main {
+        margin-left: 250px;
+        width: calc(100% - 250px);
+        padding: 30px 36px;
+        min-height: 100vh;
+      }
+
+      /* Top Header */
+      .top-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 22px;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+      h1 {
+        font-size: 24px;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+      .subtitle {
+        color: var(--muted);
+        font-size: 13px;
+        margin-top: 4px;
+      }
+      .api-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        padding: 6px 14px;
+        border-radius: 99px;
+        background: #fff;
+        border: 1px solid var(--border);
+        font-weight: 600;
+        color: var(--green-dark);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+      }
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--green);
+        box-shadow: 0 0 0 3px var(--green-glow);
+      }
+      .status-dot.loading {
+        background: #e5a108;
+        box-shadow: 0 0 0 3px rgba(229, 161, 8, 0.2);
+        animation: pulse 1s infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.4;
+        }
+      }
+
+      /* Filter Bar */
+      .filter-bar {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px 18px;
+        margin-bottom: 22px;
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        flex-wrap: wrap;
+        box-shadow: var(--shadow);
+      }
+      .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .filter-group label {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--muted);
+        text-transform: uppercase;
+      }
+      select,
+      input[type="text"] {
+        border: 1px solid var(--border);
+        background: #fbfdfc;
+        border-radius: 8px;
+        padding: 8px 12px;
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 600;
+        outline: none;
+        transition: 0.2s;
+        font-family: inherit;
+      }
+      select:focus,
+      input[type="text"]:focus {
+        border-color: var(--green);
+        background: #fff;
+      }
+
+      /* KPI Grid */
+      .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 16px;
+        margin-bottom: 22px;
+      }
+      .kpi-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        padding: 16px 18px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .kpi-label {
+        font-size: 11px;
+        color: var(--muted);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .kpi-value {
+        font-size: 22px;
+        font-weight: 900;
+        margin: 6px 0 2px;
+        color: var(--text);
+      }
+      .kpi-sub {
+        font-size: 11px;
+        color: var(--green-dark);
+        font-weight: 600;
+      }
+
+      /* Grid 2 */
+      .grid-2 {
+        display: grid;
+        grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+        gap: 18px;
+        margin-bottom: 22px;
+        width: 100%;
+      }
+
+      /* Cards Genéricos */
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        padding: 20px;
+        width: 100%;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 22px;
+      }
+      .grid-2 .card {
+        margin-bottom: 0;
+      }
+
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .card-header h2 {
+        font-size: 15px;
+        font-weight: 800;
+      }
+      .tag-badge {
+        font-size: 11px;
+        padding: 4px 10px;
+        border-radius: 99px;
+        background: var(--green-soft);
+        color: var(--green-dark);
+        font-weight: 700;
+      }
+
+      /* Container do Gráfico */
+      .chart-wrapper {
+        position: relative;
+        width: 100%;
+        max-width: 100%;
+        height: 280px;
+      }
+
+      /* Tabelas */
+      .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        min-width: 500px;
+        border-collapse: collapse;
+        font-size: 13px;
+      }
+      th {
+        text-align: left;
+        color: var(--muted);
+        font-size: 11px;
+        text-transform: uppercase;
+        font-weight: 700;
+        padding: 10px 8px;
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+      }
+      td {
+        padding: 12px 8px;
+        border-bottom: 1px solid #f0f4f1;
+        vertical-align: middle;
+        white-space: nowrap;
+      }
+      tr:last-child td {
+        border-bottom: 0;
+      }
+      .text-right {
+        text-align: right;
+      }
+      .region-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 700;
+      }
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--green);
+      }
+      .status-pill {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 700;
+        background: #eef5f0;
+        color: #0d6c2e;
+      }
+
+      .progress-bar {
+        height: 6px;
+        background: #edf2ee;
+        border-radius: 99px;
+        overflow: hidden;
+        margin-top: 5px;
+        width: 100%;
+      }
+      .progress-fill {
+        height: 100%;
+        background: var(--green);
+        border-radius: 99px;
+      }
+
+      /* Paginação */
+      .pagination-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 16px;
+        margin-top: 8px;
+        border-top: 1px solid var(--border);
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .pagination-info {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--muted);
+      }
+      .pagination-controls {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .btn-page {
+        border: 1px solid var(--border);
+        background: #fff;
+        color: var(--text);
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.2s;
+        font-family: inherit;
+      }
+      .btn-page:hover:not(:disabled) {
+        background: var(--green-soft);
+        color: var(--green-dark);
+        border-color: var(--green);
+      }
+      .btn-page:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      .page-indicator {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text);
+        padding: 0 6px;
+      }
+
+      /* Grid de Criativos */
+      .creatives-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+        gap: 16px;
+        margin-top: 8px;
+      }
+      .creative-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        display: flex;
+        flex-direction: column;
+        transition:
+          transform 0.2s,
+          border-color 0.2s;
+      }
+      .creative-card:hover {
+        transform: translateY(-3px);
+        border-color: var(--green);
+      }
+      .creative-thumb-wrap {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 4 / 5;
+        background: #0d2015;
+        overflow: hidden;
+      }
+      .creative-thumb {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+      .creative-status-badge {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .status-active {
+        background: rgba(8, 168, 59, 0.9);
+        color: #fff;
+      }
+      .status-paused {
+        background: rgba(229, 161, 8, 0.9);
+        color: #fff;
+      }
+      .status-default {
+        background: rgba(113, 128, 120, 0.9);
+        color: #fff;
+      }
+      .creative-body {
+        padding: 12px 14px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+      .creative-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text);
+        line-height: 1.35;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      /* Abas */
+      .tab-pane {
+        display: none;
+      }
+      .tab-pane.active {
+        display: block;
+      }
+      .empty-state {
+        text-align: center;
+        padding: 30px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      /* Responsividade */
+      @media (max-width: 1100px) {
+        .grid-2 {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 860px) {
+        .app {
+          flex-direction: column;
+        }
+        .sidebar {
+          position: relative;
+          width: 100%;
+          height: auto;
+          gap: 16px;
+        }
+        .main {
+          margin-left: 0;
+          width: 100%;
+          padding: 20px 16px;
+        }
+        .filter-bar {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .filter-group {
+          justify-content: space-between;
+        }
+        select,
+        input[type="text"] {
+          width: 100%;
+        }
+        .card-header input[type="text"] {
+          width: 100% !important;
+        }
+        .pagination-bar {
+          flex-direction: column;
+          align-items: center;
+          gap: 10px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div>
+          <div class="logo">FARLEY<br /><span>FREDERICO</span></div>
+          <nav class="nav">
+            <button
+              id="btnTabOverview"
+              class="active"
+              onclick="switchTab('overview')"
+            >
+              📊 Visão Geral
+            </button>
+            <button id="btnTabCreatives" onclick="switchTab('creatives')">
+              🎨 Criativos
+            </button>
+          </nav>
+        </div>
+
+        <div class="candidate-box">
+          <div class="candidate-avatar">FF</div>
+          <div class="candidate-info">
+            <b>Farley Frederico</b>
+            <small>Campanha Oficial</small>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main">
+        <!-- Top Header -->
+        <div class="top-header">
+          <div>
+            <h1 id="pageTitle">Métricas de Desempenho</h1>
+            <div class="subtitle" id="pageSubtitle">
+              Dados em tempo real alimentados via Webhook / n8n
+            </div>
+          </div>
+          <div class="api-badge">
+            <span class="status-dot" id="statusDot"></span>
+            <span id="apiStatusText">Conectando aos webhooks...</span>
+          </div>
+        </div>
+
+        <!-- ABA 1: VISÃO GERAL -->
+        <div id="tabOverview" class="tab-pane active">
+          <div class="filter-bar">
+            <div class="filter-group">
+              <label>Região:</label>
+              <select id="filterRegion" onchange="applyFilters()">
+                <option value="ALL">Todas as regiões</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label>Campanha:</label>
+              <select id="filterCampaign" onchange="applyFilters()">
+                <option value="ALL">Todas as campanhas</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- KPI Cards -->
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-label">Investimento Total</div>
+              <div class="kpi-value" id="kpiSpend">R$ 0,00</div>
+              <div class="kpi-sub">Total gasto no período</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Alcance</div>
+              <div class="kpi-value" id="kpiReach">0</div>
+              <div class="kpi-sub">Pessoas únicas</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Impressões</div>
+              <div class="kpi-value" id="kpiImpressions">0</div>
+              <div class="kpi-sub">Total de exibições</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">Frequência Média</div>
+              <div class="kpi-value" id="kpiFrequency">0,00</div>
+              <div class="kpi-sub">Impressões / Alcance</div>
+            </div>
+            <div class="kpi-card">
+              <div class="kpi-label">CPM Médio</div>
+              <div class="kpi-value" id="kpiCPM">R$ 0,00</div>
+              <div class="kpi-sub">Custo por mil impressões</div>
+            </div>
+          </div>
+
+          <!-- BLOCO 1: Regiões & Gráfico -->
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-header">
+                <h2>Desempenho por Região</h2>
+                <span class="tag-badge" id="badgeRegionCount">0 regiões</span>
+              </div>
+              <div class="table-responsive">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Região</th>
+                      <th class="text-right">Gasto</th>
+                      <th class="text-right">Alcance</th>
+                      <th class="text-right">Impressões</th>
+                      <th class="text-right">CPM</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyRegions">
+                    <tr>
+                      <td colspan="5" class="empty-state">
+                        Carregando dados...
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h2>Distribuição de Investimento</h2>
+                <span class="tag-badge">Por Região</span>
+              </div>
+              <div class="chart-wrapper">
+                <canvas id="chartInvestimento"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- BLOCO 2: Desempenho por Campanha -->
+          <div class="card">
+            <div class="card-header">
+              <h2>Desempenho por Campanha</h2>
+              <span class="tag-badge" id="badgeCampaignCount">0 campanhas</span>
+            </div>
+            <div class="table-responsive">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nome da Campanha</th>
+                    <th>Status</th>
+                    <th class="text-right">Investimento</th>
+                    <th class="text-right">Alcance</th>
+                    <th class="text-right">Impressões</th>
+                    <th class="text-right">Engajamento</th>
+                    <th class="text-right">CPM Médio</th>
+                  </tr>
+                </thead>
+                <tbody id="tbodyCampaigns">
+                  <tr>
+                    <td colspan="7" class="empty-state">
+                      Nenhuma campanha encontrada
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- BLOCO 3: Registros Detalhados com Paginação -->
+          <div class="card">
+            <div class="card-header">
+              <h2>Registros Detalhados</h2>
+              <div
+                style="
+                  display: flex;
+                  gap: 10px;
+                  align-items: center;
+                  flex-wrap: wrap;
+                "
+              >
+                <div class="filter-group">
+                  <label>Exibir:</label>
+                  <select
+                    id="pageSizeSelect"
+                    onchange="changePageSize(this.value)"
+                  >
+                    <option value="10" selected>10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                  </select>
+                </div>
+                <input
+                  type="text"
+                  id="searchTable"
+                  style="width: 220px"
+                  placeholder="🔍 Buscar anúncio..."
+                  oninput="handleSearchTable()"
+                />
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Região</th>
+                    <th>Campanha</th>
+                    <th>Anúncio / Criativo</th>
+                    <th class="text-right">Gasto</th>
+                    <th class="text-right">Alcance</th>
+                    <th class="text-right">Impressões</th>
+                    <th class="text-right">Visualizações</th>
+                  </tr>
+                </thead>
+                <tbody id="tbodyRawData">
+                  <tr>
+                    <td colspan="8" class="empty-state">Aguardando dados...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Controles de Paginação -->
+            <div class="pagination-bar">
+              <div class="pagination-info" id="paginationInfo">
+                Mostrando 0 - 0 de 0 registros
+              </div>
+              <div class="pagination-controls">
+                <button
+                  class="btn-page"
+                  id="btnFirstPage"
+                  onclick="goToPage(1)"
+                  disabled
+                >
+                  &laquo; Primeira
+                </button>
+                <button
+                  class="btn-page"
+                  id="btnPrevPage"
+                  onclick="changePage(-1)"
+                  disabled
+                >
+                  &lsaquo; Anterior
+                </button>
+                <span class="page-indicator" id="pageIndicator"
+                  >Página 1 de 1</span
+                >
+                <button
+                  class="btn-page"
+                  id="btnNextPage"
+                  onclick="changePage(1)"
+                  disabled
+                >
+                  Próxima &rsaquo;
+                </button>
+                <button
+                  class="btn-page"
+                  id="btnLastPage"
+                  onclick="goToLastPage()"
+                  disabled
+                >
+                  Última &raquo;
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ABA 2: CRIATIVOS -->
+        <div id="tabCreatives" class="tab-pane">
+          <div class="card">
+            <div class="card-header">
+              <h2>Galeria de Criativos em Veiculação</h2>
+              <input
+                type="text"
+                id="searchCreative"
+                style="width: 220px"
+                placeholder="🔍 Buscar criativo..."
+                oninput="filterCreatives()"
+              />
+            </div>
+
+            <div id="creativesLoading" class="empty-state">
+              Carregando lista de criativos...
+            </div>
+            <div
+              id="creativesContainer"
+              class="creatives-grid"
+              style="display: none"
+            ></div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      const WEBHOOK_METRICS_URL =
+        "https://webhook.gestoraautomatica.online/webhook/dashboard-farley";
+      const WEBHOOK_CREATIVES_URL =
+        "https://webhook.gestoraautomatica.online/webhook/lista-criativos";
+
+      let rawApiData = [];
+      let filteredData = [];
+      let rawCreativesData = [];
+      let chartInstance = null;
+
+      // Variáveis da Paginação
+      let currentPage = 1;
+      let pageSize = 25;
+      let tableFilteredList = [];
+
+      const formatCurrency = (val) =>
+        new Intl.NumberFormat("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+        }).format(val || 0);
+      const formatNumber = (val) =>
+        new Intl.NumberFormat("pt-BR").format(Math.round(val || 0));
+      const formatDecimal = (val) =>
+        new Intl.NumberFormat("pt-BR", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(val || 0);
+
+      function parseNum(value) {
+        if (value === null || value === undefined) return 0;
+        if (typeof value === "number") return value;
+        const cleaned = value
+          .toString()
+          .replace(/[^\d.,-]/g, "")
+          .replace(",", ".");
+        return parseFloat(cleaned) || 0;
+      }
+
+      function switchTab(tabName) {
+        document
+          .getElementById("btnTabOverview")
+          .classList.toggle("active", tabName === "overview");
+        document
+          .getElementById("btnTabCreatives")
+          .classList.toggle("active", tabName === "creatives");
+
+        document
+          .getElementById("tabOverview")
+          .classList.toggle("active", tabName === "overview");
+        document
+          .getElementById("tabCreatives")
+          .classList.toggle("active", tabName === "creatives");
+
+        if (tabName === "overview") {
+          document.getElementById("pageTitle").innerText =
+            "Métricas de Desempenho";
+          document.getElementById("pageSubtitle").innerText =
+            "Dados em tempo real alimentados via Webhook / n8n";
+        } else {
+          document.getElementById("pageTitle").innerText =
+            "Galeria de Criativos";
+          document.getElementById("pageSubtitle").innerText =
+            "Status, miniaturas e nomes dos criativos cadastrados";
+          if (rawCreativesData.length === 0) fetchCreativesData();
+        }
+      }
+
+      function extractRegion(adset, adName) {
+        const text = (adset + " " + adName).toUpperCase();
+        if (text.includes("SERRA_GERAL") || text.includes("SERRA GERAL"))
+          return "Serra Geral";
+        if (text.includes("NORTE_MG") || text.includes("NORTE DE MINAS"))
+          return "Norte de Minas";
+        if (
+          text.includes("VALE_RIO_PARDO") ||
+          text.includes("VALE DO RIO PARDO")
+        )
+          return "Vale do Rio Pardo";
+        return "Geral";
+      }
+
+      async function fetchMetricsData() {
+        const dot = document.getElementById("statusDot");
+        const statusText = document.getElementById("apiStatusText");
+
+        dot.className = "status-dot loading";
+        statusText.innerText = "Buscando métricas no n8n...";
+
+        try {
+          const response = await fetch(WEBHOOK_METRICS_URL, {
+            method: "GET",
+            headers: { Accept: "application/json" },
+          });
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+          const json = await response.json();
+          let list = Array.isArray(json)
+            ? json
+            : json.data || json.items || [json];
+
+          rawApiData = list.map((raw) => {
+            const item = raw.json ? raw.json : raw;
+            const adset = item["Conjunto de Anúncio"] || item.adset_name || "";
+            const adName = item["Anúncio"] || item.ad_name || "-";
+            return {
+              date: item["Data"] || item.date || item.data || "",
+              region: extractRegion(adset, adName),
+              campaign:
+                item["Campanha"] || item.campaign_name || "Campanha Meta Ads",
+              adName: adName,
+              spend: parseNum(item["Investimento"] || item.spend || item.valor),
+              reach: parseNum(item["Alcance"] || item.reach),
+              impressions: parseNum(item["Impressões"] || item.impressions),
+              frequency: parseNum(item["Frequência"] || item.frequency),
+              cpm: parseNum(item["CPM"] || item.cpm),
+              reactions: parseNum(item["Reações"] || 0),
+              videoViews: parseNum(item["Visualizações de vídeo"] || 0),
+              status: "Ativa",
+            };
+          });
+
+          const now = new Date();
+          const timeStr =
+            now.toLocaleDateString("pt-BR") +
+            ", " +
+            now.toLocaleTimeString("pt-BR", {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+
+          dot.className = "status-dot";
+          dot.style.background = "var(--green)";
+          statusText.innerText = `API Conectada • ${rawApiData.length} registros • ${timeStr}`;
+
+          populateFilterOptions();
+          applyFilters();
+        } catch (err) {
+          console.error("Erro métricas:", err);
+          dot.className = "status-dot";
+          dot.style.background = "#e53935";
+          statusText.innerText = `Erro de conexão (Métricas): ${err.message}`;
+        }
+      }
+
+      async function fetchCreativesData() {
+        const loading = document.getElementById("creativesLoading");
+        const container = document.getElementById("creativesContainer");
+
+        loading.style.display = "block";
+        loading.innerText = "Carregando lista de criativos...";
+        container.style.display = "none";
+
+        try {
+          const response = await fetch(WEBHOOK_CREATIVES_URL, {
+            method: "GET",
+            headers: { Accept: "application/json" },
+          });
+
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+          const json = await response.json();
+          let list = Array.isArray(json)
+            ? json
+            : json.data || json.items || [json];
+
+          rawCreativesData = list.map((raw) => {
+            const item = raw.json ? raw.json : raw;
+            const name =
+              item.Nome || item.nome || item.name || "Criativo sem nome";
+            const link = item.Link || item.link || item.url || item.thumb || "";
+            const status = item.Status || item.status || "ACTIVE";
+
+            return {
+              name: name,
+              thumb: String(link).trim(),
+              status: String(status).toUpperCase(),
+            };
+          });
+
+          loading.style.display = "none";
+          container.style.display = "grid";
+          renderCreatives(rawCreativesData);
+        } catch (err) {
+          console.error("❌ Erro criativos:", err);
+          loading.innerText = `Erro ao carregar criativos: ${err.message}`;
+        }
+      }
+
+      function renderCreatives(list) {
+        const container = document.getElementById("creativesContainer");
+
+        if (!list || list.length === 0) {
+          container.innerHTML =
+            '<div class="empty-state" style="grid-column: 1 / -1;">Nenhum criativo encontrado.</div>';
+          return;
+        }
+
+        container.innerHTML = list
+          .map((item) => {
+            let statusClass = "status-default";
+            if (item.status === "ACTIVE" || item.status.includes("ATIVO")) {
+              statusClass = "status-active";
+            } else if (
+              item.status === "PAUSED" ||
+              item.status.includes("PAUSADO")
+            ) {
+              statusClass = "status-paused";
+            }
+
+            return `
+              <div class="creative-card">
+                <div class="creative-thumb-wrap">
+                  <img src="${item.thumb}" 
+                       alt="${item.name}" 
+                       class="creative-thumb" 
+                       loading="lazy"
+                       referrerpolicy="no-referrer"
+                       onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'600\\' height=\\'337\\' viewBox=\\'0 0 600 337\\'><rect width=\\'600\\' height=\\'337\\' fill=\\'%23e2ebe5\\'/><text x=\\'50%\\' y=\\'50%\\' font-family=\\'sans-serif\\' font-size=\\'14\\' font-weight=\\'bold\\' fill=\\'%23718078\\' text-anchor=\\'middle\\' dy=\\'.3em\\'>Sem Imagem</text></svg>'">
+                  <span class="creative-status-badge ${statusClass}">${item.status}</span>
+                </div>
+                <div class="creative-body">
+                  <div class="creative-title" title="${item.name}">${item.name}</div>
+                </div>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      function filterCreatives() {
+        const query = document
+          .getElementById("searchCreative")
+          .value.toLowerCase();
+        const filtered = rawCreativesData.filter((item) =>
+          item.name.toLowerCase().includes(query),
+        );
+        renderCreatives(filtered);
+      }
+
+      function populateFilterOptions() {
+        const regionSelect = document.getElementById("filterRegion");
+        const campaignSelect = document.getElementById("filterCampaign");
+
+        const currentRegion = regionSelect.value;
+        const currentCampaign = campaignSelect.value;
+
+        const regions = [...new Set(rawApiData.map((d) => d.region))].filter(
+          Boolean,
+        );
+        const campaigns = [
+          ...new Set(rawApiData.map((d) => d.campaign)),
+        ].filter(Boolean);
+
+        regionSelect.innerHTML =
+          '<option value="ALL">Todas as regiões</option>';
+        regions.forEach((r) => {
+          regionSelect.innerHTML += `<option value="${r}">${r}</option>`;
+        });
+
+        campaignSelect.innerHTML =
+          '<option value="ALL">Todas as campanhas</option>';
+        campaigns.forEach((c) => {
+          campaignSelect.innerHTML += `<option value="${c}">${c}</option>`;
+        });
+
+        regionSelect.value = regions.includes(currentRegion)
+          ? currentRegion
+          : "ALL";
+        campaignSelect.value = campaigns.includes(currentCampaign)
+          ? currentCampaign
+          : "ALL";
+      }
+
+      function applyFilters() {
+        const regionFilter = document.getElementById("filterRegion").value;
+        const campaignFilter = document.getElementById("filterCampaign").value;
+
+        filteredData = rawApiData.filter((item) => {
+          if (regionFilter !== "ALL" && item.region !== regionFilter)
+            return false;
+          if (campaignFilter !== "ALL" && item.campaign !== campaignFilter)
+            return false;
+          return true;
+        });
+
+        currentPage = 1;
+        renderDashboard();
+      }
+
+      function renderDashboard() {
+        const totalSpend = filteredData.reduce(
+          (acc, cur) => acc + cur.spend,
+          0,
+        );
+        const totalReach = filteredData.reduce(
+          (acc, cur) => acc + cur.reach,
+          0,
+        );
+        const totalImpressions = filteredData.reduce(
+          (acc, cur) => acc + cur.impressions,
+          0,
+        );
+
+        const avgFrequency = totalReach > 0 ? totalImpressions / totalReach : 0;
+        const avgCPM =
+          totalImpressions > 0 ? (totalSpend / totalImpressions) * 1000 : 0;
+
+        document.getElementById("kpiSpend").innerText =
+          formatCurrency(totalSpend);
+        document.getElementById("kpiReach").innerText =
+          formatNumber(totalReach);
+        document.getElementById("kpiImpressions").innerText =
+          formatNumber(totalImpressions);
+        document.getElementById("kpiFrequency").innerText =
+          formatDecimal(avgFrequency);
+        document.getElementById("kpiCPM").innerText = formatCurrency(avgCPM);
+
+        renderRegionTable(totalSpend);
+        renderCampaignTable();
+        renderChart();
+        filterFullTable();
+      }
+
+      function renderRegionTable(totalSpend) {
+        const tbody = document.getElementById("tbodyRegions");
+        const regionMap = {};
+
+        filteredData.forEach((item) => {
+          if (!regionMap[item.region])
+            regionMap[item.region] = { spend: 0, reach: 0, impressions: 0 };
+          regionMap[item.region].spend += item.spend;
+          regionMap[item.region].reach += item.reach;
+          regionMap[item.region].impressions += item.impressions;
+        });
+
+        const regions = Object.keys(regionMap);
+        document.getElementById("badgeRegionCount").innerText =
+          `${regions.length} regiões ativas`;
+
+        if (regions.length === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="5" class="empty-state">Nenhum dado encontrado</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = regions
+          .map((reg) => {
+            const data = regionMap[reg];
+            const cpm =
+              data.impressions > 0 ? (data.spend / data.impressions) * 1000 : 0;
+            const pct = totalSpend > 0 ? (data.spend / totalSpend) * 100 : 0;
+
+            return `
+              <tr>
+                <td>
+                  <div class="region-badge"><span class="dot"></span> ${reg}</div>
+                  <div class="progress-bar"><div class="progress-fill" style="width: ${pct}%"></div></div>
+                </td>
+                <td class="text-right"><b>${formatCurrency(data.spend)}</b></td>
+                <td class="text-right">${formatNumber(data.reach)}</td>
+                <td class="text-right">${formatNumber(data.impressions)}</td>
+                <td class="text-right">${formatCurrency(cpm)}</td>
+              </tr>
+            `;
+          })
+          .join("");
+      }
+
+      function renderCampaignTable() {
+        const tbody = document.getElementById("tbodyCampaigns");
+        const campMap = {};
+
+        filteredData.forEach((item) => {
+          if (!campMap[item.campaign])
+            campMap[item.campaign] = {
+              spend: 0,
+              reach: 0,
+              impressions: 0,
+              videoViews: 0,
+              reactions: 0,
+              status: item.status,
+            };
+          campMap[item.campaign].spend += item.spend;
+          campMap[item.campaign].reach += item.reach;
+          campMap[item.campaign].impressions += item.impressions;
+          campMap[item.campaign].videoViews += item.videoViews;
+          campMap[item.campaign].reactions += item.reactions;
+        });
+
+        const campaigns = Object.keys(campMap);
+        document.getElementById("badgeCampaignCount").innerText =
+          `${campaigns.length} campanhas`;
+
+        if (campaigns.length === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="7" class="empty-state">Nenhuma campanha encontrada</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = campaigns
+          .map((camp) => {
+            const data = campMap[camp];
+            const cpm =
+              data.impressions > 0 ? (data.spend / data.impressions) * 1000 : 0;
+
+            return `
+              <tr>
+                <td><b>${camp}</b></td>
+                <td><span class="status-pill">${data.status}</span></td>
+                <td class="text-right"><b>${formatCurrency(data.spend)}</b></td>
+                <td class="text-right">${formatNumber(data.reach)}</td>
+                <td class="text-right">${formatNumber(data.impressions)}</td>
+                <td class="text-right">${formatNumber(data.videoViews)} views / ${data.reactions} reações</td>
+                <td class="text-right">${formatCurrency(cpm)}</td>
+              </tr>
+            `;
+          })
+          .join("");
+      }
+
+      function renderChart() {
+        const ctx = document
+          .getElementById("chartInvestimento")
+          .getContext("2d");
+        const map = {};
+        filteredData.forEach((d) => {
+          map[d.region] = (map[d.region] || 0) + d.spend;
+        });
+
+        const labels = Object.keys(map);
+        const values = Object.values(map);
+
+        if (chartInstance) chartInstance.destroy();
+
+        chartInstance = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: labels.length ? labels : ["Sem dados"],
+            datasets: [
+              {
+                label: "Investimento (R$)",
+                data: values.length ? values : [0],
+                backgroundColor: "#08a83b",
+                borderRadius: 6,
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: (ctx) =>
+                    `Investimento: ${formatCurrency(ctx.parsed.y)}`,
+                },
+              },
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                ticks: { callback: (v) => "R$ " + v },
+                grid: { color: "#eef3ef" },
+              },
+              x: { grid: { display: false } },
+            },
+          },
+        });
+      }
+
+      // Funções de Paginação e Tabela Detalhada
+      function handleSearchTable() {
+        currentPage = 1;
+        filterFullTable();
+      }
+
+      function changePageSize(newSize) {
+        pageSize = parseInt(newSize, 10);
+        currentPage = 1;
+        renderPaginatedTable();
+      }
+
+      function changePage(delta) {
+        currentPage += delta;
+        renderPaginatedTable();
+      }
+
+      function goToPage(page) {
+        currentPage = page;
+        renderPaginatedTable();
+      }
+
+      function goToLastPage() {
+        const totalPages = Math.ceil(tableFilteredList.length / pageSize) || 1;
+        currentPage = totalPages;
+        renderPaginatedTable();
+      }
+
+      function filterFullTable() {
+        const query = document
+          .getElementById("searchTable")
+          .value.toLowerCase();
+
+        tableFilteredList = filteredData.filter(
+          (d) =>
+            d.campaign.toLowerCase().includes(query) ||
+            d.region.toLowerCase().includes(query) ||
+            d.adName.toLowerCase().includes(query) ||
+            d.date.toLowerCase().includes(query),
+        );
+
+        renderPaginatedTable();
+      }
+
+      function renderPaginatedTable() {
+        const tbody = document.getElementById("tbodyRawData");
+        const totalItems = tableFilteredList.length;
+        const totalPages = Math.ceil(totalItems / pageSize) || 1;
+
+        if (currentPage > totalPages) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+
+        const startIndex = (currentPage - 1) * pageSize;
+        const endIndex = Math.min(startIndex + pageSize, totalItems);
+        const paginatedData = tableFilteredList.slice(startIndex, endIndex);
+
+        if (totalItems === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="8" class="empty-state">Nenhum registro corresponde aos filtros/busca</td></tr>';
+          document.getElementById("paginationInfo").innerText =
+            "Mostrando 0 de 0 registros";
+        } else {
+          tbody.innerHTML = paginatedData
+            .map(
+              (item) => `
+                <tr>
+                  <td>${item.date}</td>
+                  <td><span class="region-badge"><span class="dot"></span> ${item.region}</span></td>
+                  <td><b>${item.campaign}</b></td>
+                  <td>${item.adName}</td>
+                  <td class="text-right">${formatCurrency(item.spend)}</td>
+                  <td class="text-right">${formatNumber(item.reach)}</td>
+                  <td class="text-right">${formatNumber(item.impressions)}</td>
+                  <td class="text-right">${formatNumber(item.videoViews)} views</td>
+                </tr>
+              `,
+            )
+            .join("");
+
+          document.getElementById("paginationInfo").innerText =
+            `Mostrando ${startIndex + 1} - ${endIndex} de ${totalItems} registros`;
+        }
+
+        // Atualizar controles
+        document.getElementById("pageIndicator").innerText =
+          `Página ${currentPage} de ${totalPages}`;
+        document.getElementById("btnFirstPage").disabled = currentPage === 1;
+        document.getElementById("btnPrevPage").disabled = currentPage === 1;
+        document.getElementById("btnNextPage").disabled =
+          currentPage === totalPages || totalItems === 0;
+        document.getElementById("btnLastPage").disabled =
+          currentPage === totalPages || totalItems === 0;
+      }
+
+      document.addEventListener("DOMContentLoaded", fetchMetricsData);
+    </script>
+  </body>
+</html>
