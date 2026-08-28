@@ -937,9 +937,12 @@
           return "Serra Geral";
         if (text.includes("NORTE_MG") || text.includes("NORTE DE MINAS"))
           return "Norte de Minas";
+        if (text.includes("JANAÚBA_MG") || text.includes("JANAÚBA"))
+          return "Janaúba";
         if (
           text.includes("VALE_RIO_PARDO") ||
-          text.includes("VALE DO RIO PARDO")
+          text.includes("VALE DO RIO PARDO") ||
+          text.includes("JANAÚBA")
         )
           return "Vale do Rio Pardo";
         return "Geral";
